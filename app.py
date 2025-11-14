@@ -53,7 +53,7 @@ preprocessor = joblib.load("preprocessor.pkl")
 logo_col, title_col = st.columns([1, 4])
 
 with logo_col:
-    # Make sure this file exists in repo root
+    # Ensure this file exists in repo root
     st.image("mcmaster_logo.png", width=110)
 
 with title_col:
@@ -65,7 +65,7 @@ with title_col:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =========================
-# ACCEPTED RANGES (NICELY ROUNDED)
+# ACCEPTED RANGES (CLEAN)
 # =========================
 ranges = {
     "age": (1, 65),
@@ -76,7 +76,7 @@ ranges = {
     "moisture": (5, 250)
 }
 
-# Categories (from your dataset)
+# Categories (from dataset)
 soil_types = [
     "Granite", "ML+SM", "ML", "CL+SC", "CL+ML", "SM", "CL",
     "SP+SM", "SP", "CH", "SW", "OL", "GP", "GP+GM", "SC"
@@ -86,6 +86,7 @@ location_types = ["Above WaterTable", "Fluctuation Zone", "Permanent Immersion"]
 
 maroon = "#7A003C"
 gold = "#FFCC33"
+mu_color = "#4B3869"  # third accent for μ line (not black, not maroon, not gold)
 
 # ============================================================
 # INPUT SECTION — 2 COLUMNS, 5 INPUTS EACH
@@ -98,40 +99,50 @@ with left:
         min_value=1, max_value=65, step=1
     )
     if not (ranges["age"][0] <= age <= ranges["age"][1]):
-        st.markdown("<span class='warning-text'>Outside training range – prediction may be unreliable.</span>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            "<span class='warning-text'>Age: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            unsafe_allow_html=True
+        )
 
     soil_pH = st.number_input(
         f"Soil pH [{ranges['pH'][0]}–{ranges['pH'][1]}]",
         min_value=3.0, max_value=10.0, step=0.1
     )
     if not (ranges["pH"][0] <= soil_pH <= ranges["pH"][1]):
-        st.markdown("<span class='warning-text'>Outside training range – prediction may be unreliable.</span>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            "<span class='warning-text'>Soil pH: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            unsafe_allow_html=True
+        )
 
     chloride = st.number_input(
         f"Chloride Content (mg/kg) [{ranges['chloride'][0]}–{ranges['chloride'][1]}]",
         min_value=10.0, max_value=12000.0, step=10.0
     )
     if not (ranges["chloride"][0] <= chloride <= ranges["chloride"][1]):
-        st.markdown("<span class='warning-text'>Outside training range – prediction may be unreliable.</span>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            "<span class='warning-text'>Chloride: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            unsafe_allow_html=True
+        )
 
     resistivity = st.number_input(
         f"Soil Resistivity (Ω·cm) [{ranges['resistivity'][0]}–{ranges['resistivity'][1]}]",
         min_value=80.0, max_value=13000.0, step=10.0
     )
     if not (ranges["resistivity"][0] <= resistivity <= ranges["resistivity"][1]):
-        st.markdown("<span class='warning-text'>Outside training range – prediction may be unreliable.</span>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            "<span class='warning-text'>Resistivity: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            unsafe_allow_html=True
+        )
 
     moisture = st.number_input(
         f"Moisture Content (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]",
         min_value=5.0, max_value=250.0, step=0.1
     )
     if not (ranges["moisture"][0] <= moisture <= ranges["moisture"][1]):
-        st.markdown("<span class='warning-text'>Outside training range – prediction may be unreliable.</span>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            "<span class='warning-text'>Moisture content: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            unsafe_allow_html=True
+        )
 
 with right:
     sulphate = st.number_input(
@@ -139,8 +150,10 @@ with right:
         min_value=5.0, max_value=22000.0, step=1.0  # step=1, not forcing multiples of 5
     )
     if not (ranges["sulphate"][0] <= sulphate <= ranges["sulphate"][1]):
-        st.markdown("<span class='warning-text'>Outside training range – prediction may be unreliable.</span>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            "<span class='warning-text'>Sulphate: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            unsafe_allow_html=True
+        )
 
     soil_type = st.selectbox("Soil Type", soil_types)
     foreign = st.selectbox("Foreign Inclusion Type", foreign_types)
@@ -155,7 +168,7 @@ with right:
 st.markdown("<br>", unsafe_allow_html=True)
 if st.button("Predict Corrosion Rate"):
 
-    # Prepare input dataframe (must match training feature names)
+    # Prepare input dataframe
     raw = pd.DataFrame([{
         "Age (yr)": age,
         "Soil_pH": soil_pH,
@@ -169,7 +182,7 @@ if st.button("Predict Corrosion Rate"):
         "Is_Fill_Material": is_fill
     }])
 
-    # Transform through preprocessor
+    # Transform
     Xp = preprocessor.transform(raw)
 
     # Predict NGBoost distribution
@@ -195,26 +208,26 @@ if st.button("Predict Corrosion Rate"):
     pdf_vals = norm.pdf(x_vals, loc=mu, scale=sigma)
     cdf_vals = norm.cdf(x_vals, loc=mu, scale=sigma)
 
-    # -------- PDF PLOT (smaller size) --------
+    # -------- PDF PLOT (smaller, equal size) --------
     with pdf_col:
-        fig1, ax1 = plt.subplots(figsize=(4, 3))
+        fig1, ax1 = plt.subplots(figsize=(3.5, 2.6))
         ax1.plot(x_vals, pdf_vals, linewidth=2, color=maroon)
-        ax1.axvline(mu, color="black", linestyle="--", linewidth=1.5, label=f"μ = {mu:.4f}")
-        ax1.set_title("PDF — Probability Density", fontsize=13)
-        ax1.set_xlabel("Corrosion Rate (mm/yr)", fontsize=11)
-        ax1.set_ylabel("PDF", fontsize=11)
+        ax1.axvline(mu, color=mu_color, linestyle="--", linewidth=1.8, label=f"μ = {mu:.4f}")
+        ax1.set_title("PDF — Probability Density", fontsize=12)
+        ax1.set_xlabel("Corrosion Rate (mm/yr)", fontsize=10)
+        ax1.set_ylabel("PDF", fontsize=10)
         ax1.grid(alpha=0.3)
         ax1.legend(fontsize=9)
         st.pyplot(fig1)
 
-    # -------- CDF PLOT (smaller size) --------
+    # -------- CDF PLOT (same size) --------
     with cdf_col:
-        fig2, ax2 = plt.subplots(figsize=(4, 3))
+        fig2, ax2 = plt.subplots(figsize=(3.5, 2.6))
         ax2.plot(x_vals, cdf_vals, linewidth=2, color=gold)
-        ax2.axvline(mu, color="black", linestyle="--", linewidth=1.5, label=f"μ = {mu:.4f}")
-        ax2.set_title("CDF — Probability that corrosion rate ≤ X", fontsize=13)
-        ax2.set_xlabel("Corrosion Rate (mm/yr)", fontsize=11)
-        ax2.set_ylabel("CDF", fontsize=11)
+        ax2.axvline(mu, color=mu_color, linestyle="--", linewidth=1.8, label=f"μ = {mu:.4f}")
+        ax2.set_title("CDF — Probability that corrosion rate ≤ X", fontsize=12)
+        ax2.set_xlabel("Corrosion Rate (mm/yr)", fontsize=10)
+        ax2.set_ylabel("CDF", fontsize=10)
         ax2.grid(alpha=0.3)
         ax2.legend(fontsize=9)
         st.pyplot(fig2)
