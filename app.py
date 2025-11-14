@@ -9,6 +9,20 @@ import os
 st.set_page_config(page_title="Steel Pile Corrosion Predictor", layout="wide")
 
 # ============================
+# Custom CSS for tight spacing + big labels
+# ============================
+st.markdown("""
+<style>
+.big-label {
+    margin-bottom: -10px;
+}
+div.stNumberInput, div.stSelectbox {
+    margin-top: -12px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ============================
 # Load model + preprocessor
 # ============================
 with open("model.pkl", "rb") as f:
@@ -25,7 +39,7 @@ title_col, logo_col = st.columns([5,1])
 with title_col:
     st.markdown(
         "<h1 style='text-align:center; color:#7A003C;'>"
-        "Probabilistic Prediction for Corrosion Rate of Steel Piles Embedded in Soil"
+        "Probabilistic Model for Predicting Corrosion Rate of Steel Piles Embedded in Soil"
         "</h1>",
         unsafe_allow_html=True
     )
@@ -53,62 +67,72 @@ soil_types = [
 foreign_types = ["Type_None", "Type_Shreded wood", "Type_Flyash", "Type_Cinder"]
 location_types = ["Above WaterTable", "Fluctuation Zone", "Permanent Immersion"]
 
+# Warning message
+def warn_if_out_of_range(val, lo, hi):
+    if not (lo <= val <= hi):
+        return f"<span style='color:red;'>⚠ Out of trained range</span>"
+    return ""
+
 # ============================================================
-# INPUT SECTION — Two columns (clean)
+# INPUT SECTION — Two columns with tight spacing
 # ============================================================
 left, right = st.columns(2)
-
-def warn_if_out_of_range(val, lo, hi):
-    """Return red warning text (inline) without blocking prediction."""
-    if not (lo <= val <= hi):
-        return f" <span style='color:red;'>⚠ Out of range</span>"
-    return ""
 
 # -----------------------------------------
 # LEFT SIDE
 # -----------------------------------------
 with left:
-    age = st.number_input(f"Age (yr) [{ranges['age'][0]}–{ranges['age'][1]}]", 
-                          min_value=1, max_value=70, step=1)
+
+    # Age
+    st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Age (yr) [{ranges['age'][0]}–{ranges['age'][1]}]</span></div>", unsafe_allow_html=True)
+    age = st.number_input("", min_value=1, max_value=70, step=1)
     st.markdown(warn_if_out_of_range(age, *ranges["age"]), unsafe_allow_html=True)
 
-    soil_pH = st.number_input(f"Soil pH [{ranges['pH'][0]}–{ranges['pH'][1]}]",
-                              min_value=3.0, max_value=10.0, step=0.1)
+    # Soil pH
+    st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Soil pH [{ranges['pH'][0]}–{ranges['pH'][1]}]</span></div>", unsafe_allow_html=True)
+    soil_pH = st.number_input("", min_value=3.0, max_value=10.0, step=0.1)
     st.markdown(warn_if_out_of_range(soil_pH, *ranges["pH"]), unsafe_allow_html=True)
 
-    chloride = st.number_input(
-        f"Chloride Content (mg/kg) [{ranges['chloride'][0]}–{ranges['chloride'][1]}]",
-        min_value=1.0, max_value=20000.0, step=1.0
-    )
+    # Chloride
+    st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Chloride (mg/kg) [{ranges['chloride'][0]}–{ranges['chloride'][1]}]</span></div>", unsafe_allow_html=True)
+    chloride = st.number_input("", min_value=1.0, max_value=20000.0, step=1.0)
     st.markdown(warn_if_out_of_range(chloride, *ranges["chloride"]), unsafe_allow_html=True)
 
-    moisture = st.number_input(
-        f"Moisture Content (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]",
-        min_value=1.0, max_value=300.0, step=0.1
-    )
+    # Moisture
+    st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Moisture (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]</span></div>", unsafe_allow_html=True)
+    moisture = st.number_input("", min_value=1.0, max_value=300.0, step=0.1)
     st.markdown(warn_if_out_of_range(moisture, *ranges["moisture"]), unsafe_allow_html=True)
 
-    soil_type = st.selectbox("Soil Type", soil_types)
+    # Soil Type
+    st.markdown("<div class='big-label'><span style='font-size:20px;'>Soil Type</span></div>", unsafe_allow_html=True)
+    soil_type = st.selectbox("", soil_types)
 
 # -----------------------------------------
 # RIGHT SIDE
 # -----------------------------------------
 with right:
-    resistivity = st.number_input(
-        f"Soil Resistivity (Ω·cm) [{ranges['resistivity'][0]}–{ranges['resistivity'][1]}]",
-        min_value=10.0, max_value=20000.0, step=1.0
-    )
+
+    # Resistivity
+    st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Soil Resistivity (Ω·cm) [{ranges['resistivity'][0]}–{ranges['resistivity'][1]}]</span></div>", unsafe_allow_html=True)
+    resistivity = st.number_input("", min_value=10.0, max_value=20000.0, step=1.0)
     st.markdown(warn_if_out_of_range(resistivity, *ranges["resistivity"]), unsafe_allow_html=True)
 
-    sulphate = st.number_input(
-        f"Sulphate Content (mg/kg) [{ranges['sulphate'][0]}–{ranges['sulphate'][1]}]",
-        min_value=1.0, max_value=30000.0
-    )
+    # Sulphate
+    st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Sulphate (mg/kg) [{ranges['sulphate'][0]}–{ranges['sulphate'][1]}]</span></div>", unsafe_allow_html=True)
+    sulphate = st.number_input("", min_value=1.0, max_value=30000.0, step=1.0)
     st.markdown(warn_if_out_of_range(sulphate, *ranges["sulphate"]), unsafe_allow_html=True)
 
-    foreign = st.selectbox("Foreign Inclusion Type", foreign_types)
-    location = st.selectbox("Location wrt Water Table", location_types)
-    is_fill = st.selectbox("Is Fill Material?", ["No", "Yes"])
+    # Foreign Inclusion
+    st.markdown("<div class='big-label'><span style='font-size:20px;'>Foreign Inclusion</span></div>", unsafe_allow_html=True)
+    foreign = st.selectbox("", foreign_types)
+
+    # Water table
+    st.markdown("<div class='big-label'><span style='font-size:20px;'>Location wrt Water Table</span></div>", unsafe_allow_html=True)
+    location = st.selectbox("", location_types)
+
+    # Fill material
+    st.markdown("<div class='big-label'><span style='font-size:20px;'>Is Fill Material?</span></div>", unsafe_allow_html=True)
+    is_fill = st.selectbox("", ["No", "Yes"])
     is_fill = 1 if is_fill == "Yes" else 0
 
 # ============================================================
@@ -135,13 +159,12 @@ if st.button("Predict Corrosion Rate"):
     sigma = float(dist.params["scale"])
 
     st.markdown(
-        f"<h3 style='color:#7A003C;'>Most likely corrosion rate: <b>{mu:.4f} ± {sigma:.4f} mm/yr</b></h3>",
+        f"<h3 style='color:#7A003C;'>Most likely corrosion rate: "
+        f"<b>{mu:.4f} ± {sigma:.4f} mm/yr</b></h3>",
         unsafe_allow_html=True
     )
 
-    # ============================
-    # PDF + CDF — same size as earlier
-    # ============================
+    # ========== PDF + CDF ==========
     c1, c2 = st.columns(2)
 
     x_vals = np.linspace(max(0.0001, mu - 4*sigma), mu + 4*sigma, 600)
@@ -174,6 +197,8 @@ if st.button("Predict Corrosion Rate"):
 # Footer
 # ============================================================
 st.markdown(
-    "<br><h2 style='text-align:center; color:#7A003C;'>Developed by <b>Rishav Jaiswal</b><br>McMaster University</h2>",
+    "<br><h2 style='text-align:center; color:#7A003C;'>"
+    "Developed by <b>Rishav Jaiswal</b><br>McMaster University"
+    "</h2>",
     unsafe_allow_html=True
 )
