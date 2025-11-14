@@ -90,7 +90,7 @@ with left:
 
     # Soil pH
     st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Soil pH [{ranges['pH'][0]}–{ranges['pH'][1]}]</span></div>", unsafe_allow_html=True)
-    soil_pH = st.number_input("", min_value=3.0, max_value=10.0, step=0.1)
+    soil_pH = st.number_input("", min_value=3.0, max_value=10.0, step=0.5)
     st.markdown(warn_if_out_of_range(soil_pH, *ranges["pH"]), unsafe_allow_html=True)
 
     # Chloride
@@ -100,7 +100,7 @@ with left:
 
     # Moisture
     st.markdown(f"<div class='big-label'><span style='font-size:20px;'>Moisture (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]</span></div>", unsafe_allow_html=True)
-    moisture = st.number_input("", min_value=1.0, max_value=300.0, step=0.1)
+    moisture = st.number_input("", min_value=1.0, max_value=300.0, step=0.5)
     st.markdown(warn_if_out_of_range(moisture, *ranges["moisture"]), unsafe_allow_html=True)
 
     # Soil Type
@@ -202,5 +202,6 @@ st.markdown(
     "</h2>",
     unsafe_allow_html=True
 )
+
 
 
