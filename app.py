@@ -34,7 +34,7 @@ with open("preprocessor.pkl", "rb") as f:
 # ============================
 # Header + McMaster Logo
 # ============================
-title_col, logo_col = st.columns([5,1])
+title_col, logo_col = st.columns([7,2])
 
 with title_col:
     st.markdown(
@@ -46,7 +46,7 @@ with title_col:
 
 with logo_col:
     if os.path.exists("mcmaster_logo.png"):
-        st.image("mcmaster_logo.png", width=70)
+        st.image("mcmaster_logo.png", width=90)
 
 # ============================
 # Accepted Ranges
@@ -202,4 +202,5 @@ st.markdown(
     "</h2>",
     unsafe_allow_html=True
 )
+
 
