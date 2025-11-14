@@ -68,48 +68,58 @@ def warn_if_out_of_range(val, lo, hi):
 # LEFT SIDE
 # -----------------------------------------
 with left:
-    age = st.number_input(f"Age (yr) [{ranges['age'][0]}–{ranges['age'][1]}]", 
-                          min_value=1, max_value=70, step=1)
+    # Age
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Age (yr) [1–70]</span>", unsafe_allow_html=True)
+    age = st.number_input("", min_value=1, max_value=70, step=1)
     st.markdown(warn_if_out_of_range(age, *ranges["age"]), unsafe_allow_html=True)
-
-    soil_pH = st.number_input(f"Soil pH [{ranges['pH'][0]}–{ranges['pH'][1]}]",
-                              min_value=3.0, max_value=10.0, step=0.1)
+    
+    # Soil pH
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Soil pH [3.0–10.0]</span>", unsafe_allow_html=True)
+    soil_pH = st.number_input("", min_value=3.0, max_value=10.0, step=0.1)
     st.markdown(warn_if_out_of_range(soil_pH, *ranges["pH"]), unsafe_allow_html=True)
-
-    chloride = st.number_input(
-        f"Chloride Content (mg/kg) [{ranges['chloride'][0]}–{ranges['chloride'][1]}]",
-        min_value=1.0, max_value=20000.0, step=1.0
-    )
+    
+    # Chloride
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Chloride Content (mg/kg) [10–12000]</span>", unsafe_allow_html=True)
+    chloride = st.number_input("", min_value=1.0, max_value=20000.0, step=1.0)
     st.markdown(warn_if_out_of_range(chloride, *ranges["chloride"]), unsafe_allow_html=True)
-
-    moisture = st.number_input(
-        f"Moisture Content (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]",
-        min_value=1.0, max_value=300.0, step=0.1
-    )
+    
+    # Moisture
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Moisture Content (%) [5–250]</span>", unsafe_allow_html=True)
+    moisture = st.number_input("", min_value=1.0, max_value=300.0, step=0.1)
     st.markdown(warn_if_out_of_range(moisture, *ranges["moisture"]), unsafe_allow_html=True)
+    
+    # Soil type
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Soil Type</span>", unsafe_allow_html=True)
+    soil_type = st.selectbox("", soil_types)
 
-    soil_type = st.selectbox("Soil Type", soil_types)
 
 # -----------------------------------------
 # RIGHT SIDE
 # -----------------------------------------
 with right:
-    resistivity = st.number_input(
-        f"Soil Resistivity (Ω·cm) [{ranges['resistivity'][0]}–{ranges['resistivity'][1]}]",
-        min_value=10.0, max_value=20000.0, step=1.0
-    )
+    # Resistivity
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Soil Resistivity (Ω·cm) [80–13000]</span>", unsafe_allow_html=True)
+    resistivity = st.number_input("", min_value=10.0, max_value=20000.0, step=1.0)
     st.markdown(warn_if_out_of_range(resistivity, *ranges["resistivity"]), unsafe_allow_html=True)
-
-    sulphate = st.number_input(
-        f"Sulphate Content (mg/kg) [{ranges['sulphate'][0]}–{ranges['sulphate'][1]}]",
-        min_value=1.0, max_value=30000.0
-    )
+    
+    # Sulphate
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Sulphate Content (mg/kg) [5–22000]</span>", unsafe_allow_html=True)
+    sulphate = st.number_input("", min_value=1.0, max_value=30000.0)
     st.markdown(warn_if_out_of_range(sulphate, *ranges["sulphate"]), unsafe_allow_html=True)
-
-    foreign = st.selectbox("Foreign Inclusion Type", foreign_types)
-    location = st.selectbox("Location wrt Water Table", location_types)
-    is_fill = st.selectbox("Is Fill Material?", ["No", "Yes"])
+    
+    # Foreign inclusion
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Foreign Inclusion Type</span>", unsafe_allow_html=True)
+    foreign = st.selectbox("", foreign_types)
+    
+    # Location
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Location wrt Water Table</span>", unsafe_allow_html=True)
+    location = st.selectbox("", location_types)
+    
+    # Fill material
+    st.markdown("<span style='font-size:20px; font-weight:600;'>Is Fill Material?</span>", unsafe_allow_html=True)
+    is_fill = st.selectbox("", ["No", "Yes"])
     is_fill = 1 if is_fill == "Yes" else 0
+
 
 # ============================================================
 # Prediction
@@ -177,4 +187,5 @@ st.markdown(
     "<br><h2 style='text-align:center; color:#7A003C;'>Developed by <b>Rishav Jaiswal</b><br>McMaster University</h2>",
     unsafe_allow_html=True
 )
+
 
