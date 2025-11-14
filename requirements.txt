@@ -1,8 +1,8 @@
 streamlit
-numpy
+scikit-learn==1.6.1
+ngboost==0.3.13
 pandas
-scikit-learn
+numpy
 matplotlib
 scipy
 joblib
-ngboost
