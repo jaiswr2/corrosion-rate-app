@@ -39,7 +39,7 @@ title_col, logo_col = st.columns([5,1])
 with title_col:
     st.markdown(
         "<h1 style='text-align:center; color:#7A003C;'>"
-        "Probabilistic Model for Predicting Corrosion Rate of Steel Piles Embedded in Soil"
+        "Physically-Informed Probabilistic Model for Predicting Corrosion Rate of Steel Piles Embedded in Soil"
         "</h1>",
         unsafe_allow_html=True
     )
@@ -202,3 +202,4 @@ st.markdown(
     "</h2>",
     unsafe_allow_html=True
 )
+
