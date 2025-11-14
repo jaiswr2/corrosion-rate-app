@@ -1,82 +1,71 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import joblib
+import pickle
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+import os
 
-# =========================
-# PAGE CONFIG
-# =========================
-st.set_page_config(page_title="Steel Pile Corrosion Rate Predictor", layout="wide")
+# ------------------------------------------------
+# Streamlit page config
+# ------------------------------------------------
+st.set_page_config(
+    page_title="Steel Pile Corrosion Rate Predictor",
+    layout="wide"
+)
 
-# =========================
-# McMASTER THEME (CSS)
-# =========================
-st.markdown("""
-    <style>
-        h1, h2, h3 {
-            color: #7A003C !important;  /* McMaster maroon */
-        }
+# McMaster-ish theme colors
+MAC_MAROON = "#7A003C"
+MAC_GOLD = "#FDBF57"
+MU_COLOR = "#00427A"   # dark blue for μ text and line
 
-        .stButton>button {
-            background-color:#7A003C;
-            color:white;
-            border-radius:8px;
-            height:3em;
-            width:14em;
-            font-size:16px;
-            font-weight:bold;
-        }
-        .stButton>button:hover {
-            background-color:#5C002C;
-            color:white;
-        }
+plt.rcParams.update({
+    "figure.autolayout": False
+})
 
-        .warning-text {
-            color: red;
-            font-weight: bold;
-            font-size: 12px;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# ------------------------------------------------
+# Load model + preprocessor
+# ------------------------------------------------
+with open("model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-# =========================
-# LOAD MODEL + PREPROCESSOR
-# =========================
-model = joblib.load("model.pkl")
-preprocessor = joblib.load("preprocessor.pkl")
+with open("preprocessor.pkl", "rb") as f:
+    preprocessor = pickle.load(f)
 
-# =========================
-# LOGO + TITLE
-# =========================
-logo_col, title_col = st.columns([1, 4])
+# ------------------------------------------------
+# Header + (optional) logo
+# ------------------------------------------------
+header_col, logo_col = st.columns([4, 1])
 
-with logo_col:
-    # Ensure this file exists in repo root
-    st.image("mcmaster_logo.png", width=110)
-
-with title_col:
+with header_col:
     st.markdown(
         "<h1 style='text-align:center;'>Prediction of Corrosion Rate for Steel Piles Embedded in Soil</h1>",
         unsafe_allow_html=True
     )
 
-st.markdown("<br>", unsafe_allow_html=True)
+with logo_col:
+    # If you upload a file called "mcmaster_logo.png" to the repo, it will appear here.
+    if os.path.exists("mcmaster_logo.png"):
+        st.image("mcmaster_logo.png", use_container_width=True)
 
-# =========================
-# ACCEPTED RANGES (CLEAN)
-# =========================
+st.markdown(
+    f"<h4 style='text-align:center; color:{MAC_MAROON};'>NGBoost-based probabilistic model (Normal distribution)</h4>",
+    unsafe_allow_html=True
+)
+
+# ------------------------------------------------
+# Accepted ranges (nice, rounded)
+# ------------------------------------------------
 ranges = {
     "age": (1, 65),
     "pH": (3.0, 10.0),
-    "chloride": (10, 12000),
-    "resistivity": (80, 13000),
-    "sulphate": (5, 22000),
-    "moisture": (5, 250)
+    "chloride": (10.0, 12000.0),
+    "resistivity": (80.0, 13000.0),
+    "sulphate": (5.0, 22000.0),
+    "moisture": (5.0, 250.0)
 }
 
-# Categories (from dataset)
+# Categories (from your summary)
 soil_types = [
     "Granite", "ML+SM", "ML", "CL+SC", "CL+ML", "SM", "CL",
     "SP+SM", "SP", "CH", "SW", "OL", "GP", "GP+GM", "SC"
@@ -84,88 +73,100 @@ soil_types = [
 foreign_types = ["Type_None", "Type_Shreded wood", "Type_Flyash", "Type_Cinder"]
 location_types = ["Above WaterTable", "Fluctuation Zone", "Permanent Immersion"]
 
-maroon = "#7A003C"
-gold = "#FFCC33"
-mu_color = "#4B3869"  # third accent for μ line (not black, not maroon, not gold)
-
-# ============================================================
-# INPUT SECTION — 2 COLUMNS, 5 INPUTS EACH
-# ============================================================
+# ------------------------------------------------
+# INPUT SECTION — Two Columns (5 inputs each)
+# ------------------------------------------------
 left, right = st.columns(2)
 
 with left:
     age = st.number_input(
         f"Age (yr) [{ranges['age'][0]}–{ranges['age'][1]}]",
-        min_value=1, max_value=65, step=1
+        min_value=1,
+        max_value=100,
+        step=1,
+        value=34
     )
     if not (ranges["age"][0] <= age <= ranges["age"][1]):
         st.markdown(
-            "<span class='warning-text'>Age: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            "<span style='color:red; font-size:13px;'>Warning: input is outside the training range of the ML model.</span>",
             unsafe_allow_html=True
         )
 
     soil_pH = st.number_input(
         f"Soil pH [{ranges['pH'][0]}–{ranges['pH'][1]}]",
-        min_value=3.0, max_value=10.0, step=0.1
+        min_value=0.0,
+        max_value=14.0,
+        step=0.1,
+        value=7.8
     )
     if not (ranges["pH"][0] <= soil_pH <= ranges["pH"][1]):
         st.markdown(
-            "<span class='warning-text'>Soil pH: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            "<span style='color:red; font-size:13px;'>Warning: input is outside the training range of the ML model.</span>",
             unsafe_allow_html=True
         )
 
     chloride = st.number_input(
         f"Chloride Content (mg/kg) [{ranges['chloride'][0]}–{ranges['chloride'][1]}]",
-        min_value=10.0, max_value=12000.0, step=10.0
+        min_value=0.0,
+        max_value=20000.0,
+        step=10.0,
+        value=500.0
     )
     if not (ranges["chloride"][0] <= chloride <= ranges["chloride"][1]):
         st.markdown(
-            "<span class='warning-text'>Chloride: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            "<span style='color:red; font-size:13px;'>Warning: input is outside the training range of the ML model.</span>",
             unsafe_allow_html=True
         )
 
     resistivity = st.number_input(
         f"Soil Resistivity (Ω·cm) [{ranges['resistivity'][0]}–{ranges['resistivity'][1]}]",
-        min_value=80.0, max_value=13000.0, step=10.0
+        min_value=0.0,
+        max_value=20000.0,
+        step=10.0,
+        value=800.0
     )
     if not (ranges["resistivity"][0] <= resistivity <= ranges["resistivity"][1]):
         st.markdown(
-            "<span class='warning-text'>Resistivity: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            "<span style='color:red; font-size:13px;'>Warning: input is outside the training range of the ML model.</span>",
             unsafe_allow_html=True
         )
 
-    moisture = st.number_input(
-        f"Moisture Content (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]",
-        min_value=5.0, max_value=250.0, step=0.1
+    sulphate = st.number_input(
+        f"Sulphate Content (mg/kg) [{ranges['sulphate'][0]}–{ranges['sulphate'][1]}]",
+        min_value=0.0,
+        max_value=30000.0,
+        step=1.0,      # ✅ no forced multiples of 5
+        value=300.0
     )
-    if not (ranges["moisture"][0] <= moisture <= ranges["moisture"][1]):
+    if not (ranges["sulphate"][0] <= sulphate <= ranges["sulphate"][1]):
         st.markdown(
-            "<span class='warning-text'>Moisture content: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            "<span style='color:red; font-size:13px;'>Warning: input is outside the training range of the ML model.</span>",
             unsafe_allow_html=True
         )
 
 with right:
-    sulphate = st.number_input(
-        f"Sulphate Content (mg/kg) [{ranges['sulphate'][0]}–{ranges['sulphate'][1]}]",
-        min_value=5.0, max_value=22000.0, step=1.0  # step=1, not forcing multiples of 5
+    moisture = st.number_input(
+        f"Moisture Content (%) [{ranges['moisture'][0]}–{ranges['moisture'][1]}]",
+        min_value=0.0,
+        max_value=300.0,
+        step=0.1,
+        value=25.0
     )
-    if not (ranges["sulphate"][0] <= sulphate <= ranges["sulphate"][1]):
+    if not (ranges["moisture"][0] <= moisture <= ranges["moisture"][1]):
         st.markdown(
-            "<span class='warning-text'>Sulphate: input is outside the training range of the ML model – prediction may be unreliable.</span>",
+            "<span style='color:red; font-size:13px;'>Warning: input is outside the training range of the ML model.</span>",
             unsafe_allow_html=True
         )
 
     soil_type = st.selectbox("Soil Type", soil_types)
     foreign = st.selectbox("Foreign Inclusion Type", foreign_types)
     location = st.selectbox("Location wrt Water Table", location_types)
-
     is_fill_str = st.selectbox("Is Fill Material?", ["No", "Yes"])
     is_fill = 1 if is_fill_str == "Yes" else 0
 
-# ============================================================
-# PREDICTION BUTTON
-# ============================================================
-st.markdown("<br>", unsafe_allow_html=True)
+# ------------------------------------------------
+# Prediction
+# ------------------------------------------------
 if st.button("Predict Corrosion Rate"):
 
     # Prepare input dataframe
@@ -185,57 +186,67 @@ if st.button("Predict Corrosion Rate"):
     # Transform
     Xp = preprocessor.transform(raw)
 
-    # Predict NGBoost distribution
+    # Predict distribution
     dist = model.pred_dist(Xp)
     mu = float(dist.params["loc"])
     sigma = float(dist.params["scale"])
 
+    # μ ± σ – nicely rounded
     st.markdown(
-        f"<h3 style='text-align:center;'>Most likely corrosion rate is "
-        f"<b>{mu:.4f} ± {sigma:.4f}</b> mm/yr (μ ± σ)</h3>",
+        f"""
+        <h3 style='text-align:center;'>
+        Most likely corrosion rate is 
+        <span style='color:{MU_COLOR};'><b>{mu:.4f} ± {sigma:.4f}</b></span> mm/yr (μ ± σ)
+        </h3>
+        """,
         unsafe_allow_html=True
     )
 
-    # ============================
-    # TWO-COLUMN OUTPUT: PDF + CDF
-    # ============================
+    # ------------------------------------------------
+    # TWO-COLUMN OUTPUT (PDF + CDF) – equal size, smaller
+    # ------------------------------------------------
     pdf_col, cdf_col = st.columns(2)
 
-    # X range for plots
-    x_min = max(0.0001, mu - 4 * sigma)
-    x_max = mu + 4 * sigma
-    x_vals = np.linspace(x_min, x_max, 500)
+    x_vals = np.linspace(max(0.0001, mu - 4*sigma), mu + 4*sigma, 600)
     pdf_vals = norm.pdf(x_vals, loc=mu, scale=sigma)
     cdf_vals = norm.cdf(x_vals, loc=mu, scale=sigma)
 
-    # -------- PDF PLOT (smaller, equal size) --------
+    # -------- PDF PLOT --------
     with pdf_col:
-        fig1, ax1 = plt.subplots(figsize=(3.5, 2.6))
-        ax1.plot(x_vals, pdf_vals, linewidth=2, color=maroon)
-        ax1.axvline(mu, color=mu_color, linestyle="--", linewidth=1.8, label=f"μ = {mu:.4f}")
-        ax1.set_title("PDF — Probability Density", fontsize=12)
-        ax1.set_xlabel("Corrosion Rate (mm/yr)", fontsize=10)
-        ax1.set_ylabel("PDF", fontsize=10)
-        ax1.grid(alpha=0.3)
-        ax1.legend(fontsize=9)
-        st.pyplot(fig1)
+        fig1, ax1 = plt.subplots(figsize=(3.2, 2.5), dpi=150)
+        ax1.plot(x_vals, pdf_vals, linewidth=2, color=MAC_MAROON)
+        ax1.axvline(mu, color=MU_COLOR, linestyle="--", linewidth=1.6, label=f"μ = {mu:.4f}")
+        ax1.set_title("PDF — Probability Density", fontsize=11)
+        ax1.set_xlabel("Corrosion Rate (mm/yr)", fontsize=9)
+        ax1.set_ylabel("PDF", fontsize=9)
+        ax1.grid(alpha=0.25)
+        ax1.legend(fontsize=8)
+        fig1.tight_layout(pad=0.3)
+        st.pyplot(fig1, clear_figure=True)
 
-    # -------- CDF PLOT (same size) --------
+    # -------- CDF PLOT --------
     with cdf_col:
-        fig2, ax2 = plt.subplots(figsize=(3.5, 2.6))
-        ax2.plot(x_vals, cdf_vals, linewidth=2, color=gold)
-        ax2.axvline(mu, color=mu_color, linestyle="--", linewidth=1.8, label=f"μ = {mu:.4f}")
-        ax2.set_title("CDF — Probability that corrosion rate ≤ X", fontsize=12)
-        ax2.set_xlabel("Corrosion Rate (mm/yr)", fontsize=10)
-        ax2.set_ylabel("CDF", fontsize=10)
-        ax2.grid(alpha=0.3)
-        ax2.legend(fontsize=9)
-        st.pyplot(fig2)
+        fig2, ax2 = plt.subplots(figsize=(3.2, 2.5), dpi=150)
+        ax2.plot(x_vals, cdf_vals, linewidth=2, color=MAC_GOLD)
+        ax2.axvline(mu, color=MU_COLOR, linestyle="--", linewidth=1.6, label=f"μ = {mu:.4f}")
+        ax2.set_title("CDF — Probability corrosion rate ≤ X", fontsize=11)
+        ax2.set_xlabel("Corrosion Rate (mm/yr)", fontsize=9)
+        ax2.set_ylabel("CDF", fontsize=9)
+        ax2.grid(alpha=0.25)
+        ax2.legend(fontsize=8)
+        fig2.tight_layout(pad=0.3)
+        st.pyplot(fig2, clear_figure=True)
 
-# ============================================================
-# FOOTER
-# ============================================================
+# ------------------------------------------------
+# Footer
+# ------------------------------------------------
 st.markdown(
-    "<br><h2 style='text-align:center;'>Developed by <b>Rishav Jaiswal</b><br>McMaster University</h2>",
+    f"""
+    <br>
+    <h2 style='text-align:center;'>
+    Developed by <b>Rishav Jaiswal</b><br>
+    <span style='color:{MAC_MAROON};'>McMaster University</span>
+    </h2>
+    """,
     unsafe_allow_html=True
 )
