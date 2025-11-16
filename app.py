@@ -9,7 +9,7 @@ import os
 st.set_page_config(page_title="Steel Pile Corrosion Predictor", layout="wide")
 
 # ============================
-# Custom CSS for tight spacing + big labels
+# Custom CSS for tight spacing + big labels + highlighted button
 # ============================
 st.markdown("""
 <style>
@@ -18,6 +18,21 @@ st.markdown("""
 }
 div.stNumberInput, div.stSelectbox {
     margin-top: -12px;
+}
+.highlight-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.highlight-button button {
+    background-color: #FFD700 !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    font-size: 20px !important;
+    padding: 15px 30px !important;
+    border: 2px solid #000000 !important;
+    border-radius: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -136,9 +151,11 @@ with right:
     is_fill = 1 if is_fill == "Yes" else 0
 
 # ============================================================
-# Prediction
+# Prediction - Centered and Highlighted Button
 # ============================================================
+st.markdown('<div class="highlight-button">', unsafe_allow_html=True)
 if st.button("Predict Corrosion Rate"):
+    st.markdown('</div>', unsafe_allow_html=True)
 
     raw = pd.DataFrame([{
         "Age (yr)": age,
@@ -202,6 +219,3 @@ st.markdown(
     "</h2>",
     unsafe_allow_html=True
 )
-
-
-
