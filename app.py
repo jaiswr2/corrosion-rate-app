@@ -19,13 +19,8 @@ st.markdown("""
 div.stNumberInput, div.stSelectbox {
     margin-top: -12px;
 }
-.highlight-button {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-.highlight-button button {
+/* Style the button directly */
+.stButton > button {
     background-color: #FFD700 !important;
     color: #000000 !important;
     font-weight: bold !important;
@@ -33,6 +28,9 @@ div.stNumberInput, div.stSelectbox {
     padding: 15px 30px !important;
     border: 2px solid #000000 !important;
     border-radius: 10px !important;
+    width: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -153,62 +151,62 @@ with right:
 # ============================================================
 # Prediction - Centered and Highlighted Button
 # ============================================================
-st.markdown('<div class="highlight-button">', unsafe_allow_html=True)
-if st.button("Predict Corrosion Rate"):
-    st.markdown('</div>', unsafe_allow_html=True)
+# Create a centered container for the button
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("Predict Corrosion Rate"):
+        raw = pd.DataFrame([{
+            "Age (yr)": age,
+            "Soil_pH": soil_pH,
+            "Chloride Content (mg/kg)": chloride,
+            "Soil_Resistivity (Ω·cm)": resistivity,
+            "Sulphate_Content (mg/kg)": sulphate,
+            "Moisture_Content (%)": moisture,
+            "Soil Type": soil_type,
+            "Foreign_Inclusion_Type": foreign,
+            "Location wrt Water Table": location,
+            "Is_Fill_Material": is_fill
+        }])
 
-    raw = pd.DataFrame([{
-        "Age (yr)": age,
-        "Soil_pH": soil_pH,
-        "Chloride Content (mg/kg)": chloride,
-        "Soil_Resistivity (Ω·cm)": resistivity,
-        "Sulphate_Content (mg/kg)": sulphate,
-        "Moisture_Content (%)": moisture,
-        "Soil Type": soil_type,
-        "Foreign_Inclusion_Type": foreign,
-        "Location wrt Water Table": location,
-        "Is_Fill_Material": is_fill
-    }])
+        Xp = preprocessor.transform(raw)
+        dist = model.pred_dist(Xp)
+        mu = float(dist.params["loc"])
+        sigma = float(dist.params["scale"])
 
-    Xp = preprocessor.transform(raw)
-    dist = model.pred_dist(Xp)
-    mu = float(dist.params["loc"])
-    sigma = float(dist.params["scale"])
+        st.markdown(
+            f"<h3 style='color:#7A003C;'>Most likely corrosion rate: "
+            f"<b>{mu:.4f} ± {sigma:.4f} mm/yr</b></h3>",
+            unsafe_allow_html=True
+        )
 
-    st.markdown(
-        f"<h3 style='color:#7A003C;'>Most likely corrosion rate: "
-        f"<b>{mu:.4f} ± {sigma:.4f} mm/yr</b></h3>",
-        unsafe_allow_html=True
-    )
+        # ========== PDF + CDF ==========
+        c1, c2 = st.columns(2)
 
-    # ========== PDF + CDF ==========
-    c1, c2 = st.columns(2)
+        x_vals = np.linspace(max(0.0001, mu - 4*sigma), mu + 4*sigma, 600)
+        pdf_vals = norm.pdf(x_vals, mu, sigma)
+        cdf_vals = norm.cdf(x_vals, mu, sigma)
 
-    x_vals = np.linspace(max(0.0001, mu - 4*sigma), mu + 4*sigma, 600)
-    pdf_vals = norm.pdf(x_vals, mu, sigma)
-    cdf_vals = norm.cdf(x_vals, mu, sigma)
+        # PDF
+        with c1:
+            fig1, ax1 = plt.subplots(figsize=(6, 4.5))
+            ax1.plot(x_vals, pdf_vals, linewidth=2, color="#7A003C")
+            ax1.axvline(mu, color="#DAA520", linestyle="--", linewidth=2)
+            ax1.set_title("PDF — Probability Density", fontsize=14)
+            ax1.set_xlabel("Corrosion Rate (mm/yr)", fontsize=12)
+            ax1.set_ylabel("PDF", fontsize=12)
+            ax1.grid(alpha=0.3)
+            st.pyplot(fig1)
 
-    # PDF
-    with c1:
-        fig1, ax1 = plt.subplots(figsize=(6, 4.5))
-        ax1.plot(x_vals, pdf_vals, linewidth=2, color="#7A003C")
-        ax1.axvline(mu, color="#DAA520", linestyle="--", linewidth=2)
-        ax1.set_title("PDF — Probability Density", fontsize=14)
-        ax1.set_xlabel("Corrosion Rate (mm/yr)", fontsize=12)
-        ax1.set_ylabel("PDF", fontsize=12)
-        ax1.grid(alpha=0.3)
-        st.pyplot(fig1)
-
-    # CDF
-    with c2:
-        fig2, ax2 = plt.subplots(figsize=(6, 4.5))
-        ax2.plot(x_vals, cdf_vals, linewidth=2, color="#7A003C")
-        ax2.axvline(mu, color="#DAA520", linestyle="--", linewidth=2)
-        ax2.set_title("CDF — Probability Corrosion ≤ X", fontsize=14)
-        ax2.set_xlabel("Corrosion Rate (mm/yr)", fontsize=12)
-        ax2.set_ylabel("CDF", fontsize=12)
-        ax2.grid(alpha=0.3)
-        st.pyplot(fig2)
+        # CDF
+        with c2:
+            fig2, ax2 = plt.subplots(figsize=(6, 4.5))
+            ax2.plot(x_vals, cdf_vals, linewidth=2, color="#7A003C")
+            ax2.axvline(mu, color="#DAA520", linestyle="--", linewidth=2)
+            ax2.set_title("CDF — Probability Corrosion ≤ X", fontsize=14)
+            ax2.set_xlabel("Corrosion Rate (mm/yr)", fontsize=12)
+            ax2.set_ylabel("CDF", fontsize=12)
+            ax2.grid(alpha=0.3)
+            st.pyplot(fig2)
 
 # ============================================================
 # Footer
