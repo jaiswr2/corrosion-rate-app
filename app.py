@@ -9,7 +9,7 @@ import os
 st.set_page_config(page_title="Steel Pile Corrosion Predictor", layout="wide")
 
 # ============================
-# Custom CSS for tight spacing + big labels
+# Custom CSS for tight spacing + big labels + button styling
 # ============================
 st.markdown("""
 <style>
@@ -18,6 +18,20 @@ st.markdown("""
 }
 div.stNumberInput, div.stSelectbox {
     margin-top: -12px;
+}
+div.stButton > button {
+    background-color: #FFD700;
+    color: #000000;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 15px 30px;
+    border-radius: 10px;
+    border: 3px solid #FFA500;
+    width: 100%;
+}
+div.stButton > button:hover {
+    background-color: #FFA500;
+    border: 3px solid #FFD700;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -138,8 +152,6 @@ with right:
 # ============================================================
 # Prediction
 # ============================================================
-st.markdown("<div style='text-align:center;'><h3 style='color:#FFD700; background-color:#000000; display:inline-block; padding:10px 20px; border-radius:5px;'><b>Click 'Predict Corrosion Rate' to get results ↓</b></h3></div>", unsafe_allow_html=True)
-
 col1, col2, col3 = st.columns([1,1,1])
 with col2:
     predict_button = st.button("Predict Corrosion Rate")
